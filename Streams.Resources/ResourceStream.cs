@@ -34,7 +34,7 @@ namespace Streams.Resources {
 		}
 
 		private void SeekValue() {
-			// while not end of stream read next field pair, compare with key and skip value if it is not equal to key
+			// while not end of stream read next field pair, compare with key and skip value if it doesn't equal to key
 			while (true) {
 				var keyBytes = ReadToken();
 				if (keyBytes == null) {
