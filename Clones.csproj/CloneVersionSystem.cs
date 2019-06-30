@@ -40,28 +40,25 @@ namespace Clones
 			return null;
 		}
 
-		private string Rollback(int cloneNumber, string program)
+		private string Rollback(int cloneNumber, string _)
 		{
 			clones[cloneNumber].Rollback();
 			return null;
 		}
 
-		private string Relearn(int cloneNumber, string program)
+		private string Relearn(int cloneNumber, string _)
 		{
-			var clone = clones[cloneNumber];
-			clone.Learn(clone.Rollbacks.Pop());
+			clones[cloneNumber].Relearn();
 			return null;
 		}
 
-		private string Clone(int cloneNumber, string program)
+		private string Clone(int cloneNumber, string _)
 		{
-			var programs = new Stack<string>(clones[cloneNumber].Programs.Head);
-			var rollbacks = new Stack<string>(clones[cloneNumber].Rollbacks.Head);
-			clones.Add(new Clone(programs, rollbacks));
+			clones.Add(clones[cloneNumber].MakeClone());
 			return null;
 		}
 
-		private string Check(int cloneNumber, string program)
+		private string Check(int cloneNumber, string _)
 		{
 			return clones[cloneNumber].Programs.Peek();
 		}
@@ -90,6 +87,18 @@ namespace Clones
 		public void Rollback()
 		{
 			Rollbacks.Push(Programs.Pop());
+		}
+
+		public void Relearn()
+		{
+			Learn(Rollbacks.Pop());
+		}
+
+		public Clone MakeClone()
+		{
+			var programs = new Stack<string>(Programs.Head);
+			var rollbacks = new Stack<string>(Rollbacks.Head);
+			return new Clone(programs, rollbacks);
 		}
 	}
 
