@@ -3,7 +3,6 @@ using System;
 namespace func_rocket {
 	public class ControlTask
 	{
-		public static Vector GuessPoint = new Vector(0, 0);
 		public static Turn ControlRocket(Rocket rocket, Vector target) {
 			var p = GetGuessedPoint(rocket);
 			var guessAngle = (p - rocket.Location).Angle;
@@ -20,12 +19,11 @@ namespace func_rocket {
 			var dt = .3;
 			var p = rocket.Location;
 			var f = ForcesTask.GetThrustForce(1)(rocket);
-			while ((p - rocket.Location).Length < 400) {
+			while ((p - rocket.Location).Length < 100) {
 				var v = rocket.Velocity + f * dt;
 				p += v * dt;
 			}
-
-			GuessPoint = p;
+			
 
 			return p;
 		}
