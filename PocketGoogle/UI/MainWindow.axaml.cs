@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 
 namespace PocketGoogle.UI;
@@ -32,6 +33,12 @@ public partial class MainWindow : Window
 
 		InitializeComponent();
 		Run.Click += (_, __) => { PerformSearch(); };
+		Request.KeyDown += (_, e) =>
+		{
+			if (e.Key == Key.Enter)
+				PerformSearch();
+		};
+
 		Results.Items = Items;
 	}
 
