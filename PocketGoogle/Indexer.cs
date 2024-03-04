@@ -1,59 +1,45 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace PocketGoogle;
 
 public class Indexer : IIndexer
 {
-    private readonly Dictionary<string, HashSet<int>> index = new();
-
     /// <summary>
-    /// it has structure like {docId: {word: pos}}
+    /// it has a structure like {word: {docId: pos}}
     /// </summary>
-    private readonly Dictionary<int, Dictionary<string, List<int>>> positions = new();
+    private readonly Dictionary<string, Dictionary<int, List<int>>> positions = new();
 
     public void Add(int id, string documentText)
     {
-        const string separators = " .,!?:-\r\n";
-        var sb = new StringBuilder();
-        for (var i = 0; i < documentText.Length; i++)
+        var pos = 0;
+        foreach (var word in documentText.Split(" .,!?:-\r\n".ToCharArray()))
         {
-            var symbol = documentText[i];
-            if (separators.Contains(symbol)) continue;
-
-            sb.Append(symbol);
-            if (i + 1 == documentText.Length || separators.Contains(documentText[i + 1]))
+            if (word == string.Empty)
             {
-                var word = sb.ToString();
-                AddWord(word, i + 1 - word.Length, id);
-                sb.Clear();
+                pos++;
+                continue;
             }
+
+            positions.GetOrSetDefault(word, new())
+                .GetOrSetDefault(id, new())
+                .Add(pos);
+            pos += word.Length + 1;
         }
     }
 
-    private void AddWord(string word, int pos, int docId)
-    {
-        index.GetOrSetDefault(word, new()).Add(docId);
-        positions.GetOrSetDefault(docId, new())
-            .GetOrSetDefault(word, new())
-            .Add(pos);
-    }
-
-    public List<int> GetIds(string word) => index.GetOrSetDefault(word, new()).ToList();
+    public List<int> GetIds(string word) => positions.GetOrSetDefault(word, new()).Keys.ToList();
 
     public List<int> GetPositions(int id, string word) => positions
-        .GetOrSetDefault(id, new())
-        .GetOrSetDefault(word, new());
+        .GetOrSetDefault(word, new())
+        .GetOrSetDefault(id, new());
 
     public void Remove(int id)
     {
-        foreach (var (word, ids) in index)
+        foreach (var (_, docs) in positions)
         {
-            ids.Remove(id);
+            docs.Remove(id);
         }
-
-        positions.Remove(id);
     }
 }
 
