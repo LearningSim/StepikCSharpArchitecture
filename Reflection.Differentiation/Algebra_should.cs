@@ -1,87 +1,100 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using NUnit.Framework;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Reflection.Differentiation
+namespace Reflection.Differentiation;
+
+[TestFixture]
+public class Algebra_should
 {
-	[TestFixture]
-	public class Derivative_shouldBeCorrectFor
+	void AssertDerivativeEqualToNumericDerivative(Expression<Func<double, double>> function)
 	{
-		void TestDerivative(Expression<Func<double, double>> function)
+		var f = function.Compile();
+		const double eps = 1e-7;
+		var dfExpression = Algebra.Differentiate(function);
+		var df = dfExpression.Compile();
+		for (double x = 0; x < 5; x += 0.1)
 		{
-			var f = function.Compile();
-			double eps = 1e-7;
-			var dfunction = Algebra.Differentiate(function);
-			var df = dfunction.Compile();
-			for (double x = 0; x < 5; x += 0.1)
-			{
-				Assert.AreEqual(df(x), (f(x + eps) - f(x)) / eps, 1e-5, $"Error on function {function.Body}");
-			}
+			Assert.AreEqual((f(x + eps) - f(x)) / eps, df(x), 1e-5, $"Error on function {function.Body}");
 		}
+	}
 
-		[Test]
-		public void Constant()
-		{
-			TestDerivative(z => 1);
-			//TestDerivative(z => 3 * z * 2 * z * z);
-		}
+	[Test]
+	public void DifferentiateConstant()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => 42);
+	}
 
-		[Test]
-		public void Parameter()
-		{
-			TestDerivative(z => z);
-		}
+	[Test]
+	public void DifferentiateParameter()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => z);
+	}
 
-		[Test]
-		public void Product1()
-		{
-			TestDerivative(z => z * 5);
-		}
+	[Test]
+	public void DifferentiateLinearFunction()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => z * 5);
+	}
 
-		[Test]
-		public void Product2()
-		{
-			TestDerivative(z => z * z * 5);
-		}
+	[Test]
+	public void DifferentiateQuadraticFunction()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => z * 5 * z);
+	}
 
-		[Test]
-		public void Sum1()
-		{
-			TestDerivative(z => z + z);
-		}
+	[Test]
+	public void DifferentiateSum()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => z + z);
+	}
 
-		[Test]
-		public void Sum2()
-		{
-			TestDerivative(z => 5 * z + z * z);
-		}
+	[Test]
+	public void DifferentiateSumAndProduct()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => 5 * z + z * z);
+	}
 
-		[Test]
-		public void Sin1()
-		{
-			TestDerivative(z => Math.Sin(z));
-		}
+	[Test]
+	public void DifferentiateSin1()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => Math.Sin(z));
+	}
 
-		[Test]
-		public void Sin2()
-		{
-			TestDerivative(z => Math.Sin(z * z + z));
-		}
+	[Test]
+	public void DifferentiateSin2()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => Math.Sin(z * z + z));
+	}
 
-		[Test]
-		public void Cos1()
-		{
-			TestDerivative(z => Math.Cos(z));
-		}
+	[Test]
+	public void DifferentiateCos1()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => Math.Cos(z));
+	}
 
-		[Test]
-		public void Cos2()
-		{
-			TestDerivative(z => Math.Cos(z * z + z));
-		}
+	[Test]
+	public void DifferentiateCos2()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => Math.Cos(z * z + z));
+	}
+
+	[Test]
+	public void DifferentiateComplexExpression()
+	{
+		AssertDerivativeEqualToNumericDerivative(z => Math.Cos(2 * z + z) + 2 * Math.Sin(3 * z + z) + Math.Sin(z + 1) * Math.Cos(z + 2) * 3);
+	}
+
+	[Test]
+	public void InformativeMessage_OnNotSupportedSyntax()
+	{
+		var ex = Assert.Throws<ArgumentException>(() => Algebra.Differentiate(z => z.ToString().Length));
+		Assert.That(ex.Message, Does.Contain("ToString"));
+	}
+
+	[Test]
+	public void InformativeMessage_OnUnknownFunction()
+	{
+		var ex = Assert.Throws<ArgumentException>(() => Algebra.Differentiate(z => Math.Max(z, 2*z)));
+		Assert.That(ex.Message, Does.Contain("Max"));
 	}
 }
